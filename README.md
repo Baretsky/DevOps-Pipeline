@@ -42,8 +42,6 @@ src/
 │   └── resources/
 │       └── static/
 │           └── index.html
-│       └── templates/
-│           └── index.html
 │       └── application.properties
 ├── test/
 │   └── java/
