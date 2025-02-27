@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculatrice Spring Boot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .calculator {
+            background-color: #e6e6e6;
+            border-radius: 6px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 320px;
+            overflow: hidden;
+            border: 1px solid #999;
+        }
+
+        .calculator-header {
+            background-color: #dcdcdc;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #bbb;
+        }
+
+        .calculator-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .calculator-display {
+            background-color: #fff;
+            border: 1px solid #bbb;
+            margin: 15px;
+            padding: 10px;
+            text-align: right;
+            font-size: 28px;
+            height: 80px;
+            overflow: hidden;
+            border-radius: 2px;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .equation {
+            font-size: 14px;
+            color: #666;
+            min-height: 18px;
+            margin-bottom: 5px;
+        }
+
+        .calculator-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            padding: 15px;
+        }
+
+        .btn {
+            background-color: #f5f5f5;
+            border: 1px solid #bbb;
+            border-radius: 3px;
+            font-size: 18px;
+            height: 50px;
+            cursor: pointer;
+            outline: none;
+            transition: background-color 0.1s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn:hover {
+            background-color: #e9e9e9;
+        }
+
+        .btn:active {
+            background-color: #d9d9d9;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-clear,
+        .btn-ce {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-operator {
+            background-color: #ececec;
+            color: #333;
+        }
+
+        .btn-equals {
+            background-color: #417cff;
+            color: white;
+            border-color: #2D62D6;
+        }
+
+        .btn-equals:hover {
+            background-color: #2D62D6;
+        }
+
+        .btn-equals:active {
+            background-color: #2456BD;
+        }
+
+        .status {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            padding: 5px;
+            background-color: #ececec;
+            border-top: 1px solid #bbb;
+        }
+
+        .error {
+            color: #D32F2F;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="calculator">
+        <div class="calculator-header">
+            <div class="calculator-title">Calculatrice</div>
+        </div>
+
+        <div class="calculator-display">
+            <div class="equation" id="equation"></div>
+            <div id="display">0</div>
+        </div>
+
+        <div class="calculator-buttons">
+            <button class="btn btn-clear" onclick="clearAll()">C</button>
+            <button class="btn btn-ce" onclick="clearEntry()">CE</button>
+            <button class="btn btn-operator" onclick="requestOperation('racine-carree')">√</button>
+            <button class="btn btn-operator" onclick="prepareOperation('puissance')">x²</button>
+
+            <button class="btn" onclick="appendNumber(7)">7</button>
+            <button class="btn" onclick="appendNumber(8)">8</button>
+            <button class="btn" onclick="appendNumber(9)">9</button>
+            <button class="btn btn-operator" onclick="prepareOperation('division')">÷</button>
+
+            <button class="btn" onclick="appendNumber(4)">4</button>
+            <button class="btn" onclick="appendNumber(5)">5</button>
+            <button class="btn" onclick="appendNumber(6)">6</button>
+            <button class="btn btn-operator" onclick="prepareOperation('multiplication')">×</button>
+
+            <button class="btn" onclick="appendNumber(1)">1</button>
+            <button class="btn" onclick="appendNumber(2)">2</button>
+            <button class="btn" onclick="appendNumber(3)">3</button>
+            <button class="btn btn-operator" onclick="prepareOperation('soustraction')">−</button>
+
+            <button class="btn" onclick="appendNumber(0)">0</button>
+            <button class="btn" onclick="appendDecimal()">.</button>
+            <button class="btn btn-equals" onclick="calculate()">=</button>
+            <button class="btn btn-operator" onclick="prepareOperation('addition')">+</button>
+        </div>
+
+        <div class="status" id="status">Calculatrice Java pour un projet DevOps</div>
+    </div>
+
+    <script>
+        let currentInput = '0';
+        let firstOperand = null;
+        let operator = null;
+        let waitingForSecondOperand = false;
+
+        const display = document.getElementById('display');
+        const equation = document.getElementById('equation');
+        const statusDisplay = document.getElementById('status');
+
+        function updateDisplay() {
+            display.textContent = currentInput;
+        }
+
+        function appendNumber(number) {
+            if (waitingForSecondOperand) {
+                currentInput = number.toString();
+                waitingForSecondOperand = false;
+            } else {
+                currentInput = currentInput === '0' ? number.toString() : currentInput + number.toString();
+            }
+            updateDisplay();
+        }
+
+        function appendDecimal() {
+            if (waitingForSecondOperand) {
+                currentInput = '0.';
+                waitingForSecondOperand = false;
+                updateDisplay();
+                return;
+            }
+
+            if (!currentInput.includes('.')) {
+                currentInput += '.';
+                updateDisplay();
+            }
+        }
+
+        function prepareOperation(op) {
+            if (firstOperand === null) {
+                firstOperand = parseFloat(currentInput);
+            } else if (operator) {
+                const result = performCalculation();
+                currentInput = result.toString();
+                firstOperand = result;
+            }
+
+            operator = op;
+
+            let operatorDisplay = '';
+            switch (op) {
+                case 'addition': operatorDisplay = '+'; break;
+                case 'soustraction': operatorDisplay = '-'; break;
+                case 'multiplication': operatorDisplay = '×'; break;
+                case 'division': operatorDisplay = '÷'; break;
+                case 'puissance': operatorDisplay = '^2'; break;
+            }
+
+            equation.textContent = firstOperand + ' ' + operatorDisplay;
+            waitingForSecondOperand = true;
+        }
+
+        function calculate() {
+            if (operator === null || waitingForSecondOperand) {
+                return;
+            }
+
+            const secondOperand = parseFloat(currentInput);
+            const result = performCalculation();
+
+            let operatorDisplay = '';
+            switch (operator) {
+                case 'addition': operatorDisplay = '+'; break;
+                case 'soustraction': operatorDisplay = '-'; break;
+                case 'multiplication': operatorDisplay = '×'; break;
+                case 'division': operatorDisplay = '÷'; break;
+                case 'puissance': operatorDisplay = '^2'; break;
+            }
+
+            equation.textContent = firstOperand + ' ' + operatorDisplay + ' ' + secondOperand + ' =';
+            currentInput = result.toString();
+            updateDisplay();
+
+            firstOperand = result;
+            operator = null;
+        }
+
+        function performCalculation() {
+            const a = firstOperand;
+            const b = parseFloat(currentInput);
+
+            if (operator === 'puissance') {
+                return requestCalculation('puissance', a, 2);
+            }
+
+            return requestCalculation(operator, a, b);
+        }
+
+        function requestCalculation(operation, a, b) {
+            let url = `/api/calculatrice/${operation}?a=${a}`;
+
+            if (operation !== 'racine-carree') {
+                url += `&b=${b}`;
+            }
+
+            let result = 0;
+
+            // Pour éviter d'attendre la réponse asynchrone dans un calcul synchrone,
+            // nous simulons le calcul localement
+            switch (operation) {
+                case 'addition': result = a + b; break;
+                case 'soustraction': result = a - b; break;
+                case 'multiplication': result = a * b; break;
+                case 'division':
+                    if (b === 0) {
+                        statusDisplay.textContent = "Erreur: Division par zéro";
+                        statusDisplay.classList.add("error");
+                        return 0;
+                    }
+                    result = a / b;
+                    break;
+                case 'puissance': result = Math.pow(a, b); break;
+                case 'racine-carree':
+                    if (a < 0) {
+                        statusDisplay.textContent = "Erreur: Racine carrée d'un nombre négatif";
+                        statusDisplay.classList.add("error");
+                        return 0;
+                    }
+                    result = Math.sqrt(a);
+                    break;
+            }
+
+            // Faisons quand même l'appel API pour la cohérence des données
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.erreur || 'Une erreur est survenue');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    statusDisplay.textContent = "Calcul effectué avec succès";
+                    statusDisplay.classList.remove("error");
+                })
+                .catch(error => {
+                    statusDisplay.textContent = error.message;
+                    statusDisplay.classList.add("error");
+                });
+
+            return result;
+        }
+
+        function requestOperation(operation) {
+            const value = parseFloat(currentInput);
+
+            if (operation === 'racine-carree') {
+                if (value < 0) {
+                    statusDisplay.textContent = "Erreur: Racine carrée d'un nombre négatif";
+                    statusDisplay.classList.add("error");
+                    return;
+                }
+
+                equation.textContent = `√(${value})`;
+
+                fetch(`/api/calculatrice/${operation}?a=${value}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => {
+                                throw new Error(err.erreur || 'Une erreur est survenue');
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        currentInput = data.resultat.toString();
+                        updateDisplay();
+                        statusDisplay.textContent = "Calcul effectué avec succès";
+                        statusDisplay.classList.remove("error");
+                    })
+                    .catch(error => {
+                        statusDisplay.textContent = error.message;
+                        statusDisplay.classList.add("error");
+                    });
+            }
+        }
+
+        function clearAll() {
+            currentInput = '0';
+            firstOperand = null;
+            operator = null;
+            waitingForSecondOperand = false;
+            equation.textContent = '';
+            statusDisplay.textContent = "Calculatrice Java pour un projet DevOps";
+            statusDisplay.classList.remove("error");
+            updateDisplay();
+        }
+
+        function clearEntry() {
+            currentInput = '0';
+            updateDisplay();
+        }
+
+        // Initialiser l'affichage
+        updateDisplay();
+    </script>
+</body>
+
+</html>
