@@ -80,7 +80,7 @@ pipeline {
 
         stage('Image Scan') {
             steps {
-                sh "trivy image --format table -o trivy-image-report.html Baretsky24/calculatrice-java-devops:latest"
+                sh "trivy image --format table -o trivy-image-report.html baretsky24/calculatrice-java-devops:latest"
             }
         }
 
@@ -88,7 +88,7 @@ pipeline {
             steps {
                 script{
                     withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
-                        sh "docker push Baretsky24/calculatrice-java-devops:latest"
+                        sh "docker push baretsky24/calculatrice-java-devops:latest"
                     }
                 }
             }
