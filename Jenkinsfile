@@ -72,7 +72,7 @@ pipeline {
             steps {
                 script{
                     withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
-                        sh "docker build -t Baretsky24/calculatrice-java-devops:latest ."
+                        sh "docker build -t baretsky24/calculatrice-java-devops:latest ."
                     }
                 }
             }
