@@ -87,7 +87,7 @@ Le projet inclut un `Jenkinsfile` qui configure un pipeline CI/CD complet avec l
 
 ### Visuel du pipeline CI/CD
 
-![Pipeline CI/CD avec Jenkins](pipeline.png)
+![Pipeline CI/CD avec Jenkins](images/pipeline.png)
 
 ## Capture d'écran
 
