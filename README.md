@@ -85,6 +85,10 @@ Le projet inclut un `Jenkinsfile` qui configure un pipeline CI/CD complet avec l
 - Analyse statique de code avec SonarQube
 - Déploiement vers les environnements de développement et production
 
+### Visuel du pipeline CI/CD
+
+![Pipeline CI/CD avec Jenkins](pipeline.png)
+
 ## Capture d'écran
 
 ![Capture d'écran de la calculatrice](images/Calculatrice.png)
